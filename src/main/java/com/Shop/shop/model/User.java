@@ -3,6 +3,8 @@ package com.Shop.shop.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
@@ -26,4 +28,10 @@ public class User {
     private String phoneNumber;
     @Column(nullable = false)
     private String password;
+    private String verificationToken;
+    @Column(nullable = false)
+    private boolean enabled;
+    @Column(nullable = false)
+    private LocalDateTime tokenExpirationTime;
+    private LocalDateTime lastLogin;
 }

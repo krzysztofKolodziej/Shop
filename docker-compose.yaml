@@ -1,0 +1,97 @@
+
+services:
+  zookeeper:
+    image: 'confluentinc/cp-zookeeper:7.4.1'
+    ports:
+      - '2181:2181'
+    volumes:
+      - C:/Users/Sprzetowo/java projects/shop/src/main/resources/server.properties:/etc/kafka/zookeeper.properties
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - shop-network
+
+  kafka:
+    image: 'confluentinc/cp-kafka:7.4.1'
+    depends_on:
+      - zookeeper
+    ports:
+      - '9092:9092'
+    volumes:
+      - C:/Users/Sprzetowo/java projects/shop/src/main/resources/server.properties:/etc/kafka/server.properties
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - shop-network
+
+  shop-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: shop-service-image
+    depends_on:
+      - kafka
+      - postgres_db_shop
+    ports:
+      - '8080:8080'
+    networks:
+      - shop-network
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+
+  shop-order-service:
+    build:
+      context: ../shop-order-service
+      dockerfile: Dockerfile
+    image: shop-order-service-image
+    depends_on:
+      - kafka
+    ports:
+      - '8081:8081'
+    networks:
+      - shop-network
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+  postgres_db_shop:
+    image: postgres:latest
+    container_name: postgres_db_shop
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: Shop
+    ports:
+      - "5433:5432"
+    networks:
+      - shop-network
+    volumes:
+      - db_shop_data:/var/lib/postgresql/data
+
+  postgres_db_shop_order_service:
+    image: postgres:latest
+    container_name: postgres_db_shop_order_service
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: shop_order_service
+    ports:
+      - "5434:5432"
+    networks:
+      - shop-network
+    volumes:
+      - db_shop_order_service_data:/var/lib/postgresql/data
+
+volumes:
+  db_shop_data:
+  db_shop_order_service_data:
+
+networks:
+  shop-network:
+    driver: bridge

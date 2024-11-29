@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class AddUserCommand {
+public class UpdateUserCommand {
     @NotBlank(message = "Name cannot be empty")
     private String name;
     @NotBlank(message = "LastName cannot be empty")
@@ -23,6 +23,8 @@ public class AddUserCommand {
     @Size(min = 9, max = 9, message = "Password must be exactly 8 characters long")
     @Pattern(regexp = "^\\d{9}$", message = "Invalid phone number")
     private String phoneNumber;
+    private String oldPassword;
     @ValidPassword
-    private String password;
+    private String newPassword;
 }
+
